@@ -77,6 +77,9 @@ for pair in "a b" "b a" "genes hg002.highconf"; do
   check "subtract $1 $2"  -- subtract  -a "$DATA/$1.bed" -b "$DATA/$2.bed"
   check "closest $1 $2 (sorted)" -- closest -a "$tmp/$1.sorted.bed" -b "$tmp/$2.sorted.bed"
 done
+# intersect also runs with the real-data pair reversed (#7): hg002's -b records
+# span several bin-tree levels, which exercises bedtools' within-record hit order.
+check "intersect hg002.highconf genes" -- intersect -a "$DATA/hg002.highconf.bed" -b "$DATA/genes.bed"
 
 echo "---"
 echo "$pass passed, $fail failed"
