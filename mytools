@@ -1,0 +1,15 @@
+#!/usr/bin/env Rscript
+# mytools: a small reimplementation of a subset of bedtools.
+
+VERSION <- "0.1.0"
+
+main <- function(args) {
+  if (length(args) == 1 && args[1] == "--version") {
+    cat("mytools ", VERSION, "\n", sep = "")
+    return(0L)
+  }
+  cat("usage: mytools --version\n", file = stderr())
+  2L
+}
+
+quit(status = main(commandArgs(trailingOnly = TRUE)))
