@@ -68,11 +68,11 @@ Every flag name and meaning matches bedtools exactly.
 
 | Subcommand  | Flags in v1        | Behaviour |
 |-------------|--------------------|-----------|
-| `sort`      | `-i`, `-header`    | Sort by chrom (**lexicographic**, bedtools' default: `chr1, chr10, chr2, …`), then start, then end. Stable. No `-sizeA`, `-g`, `-faidx`, etc. |
+| `sort`      | `-i`, `-header`    | Sort by chrom (**lexicographic**, bedtools' default: `chr1, chr10, chr2, …`), then start. Stable on ties — **not** by end (verified: bedtools leaves `chr1 10 50` before `chr1 10 20`). No `-sizeA`, `-g`, `-faidx`, etc. |
 | `merge`     | `-i`, `-header`    | Merge overlapping and bookended intervals (`-d 0` semantics). Output is BED3 — extra columns are dropped, as bedtools does. |
 | `intersect` | `-a`, `-b`, `-header` | Default bedtools mode: for each `-a` record, report the overlapping portion with each `-b` record it overlaps. Extra `-a` columns pass through. |
 | `subtract`  | `-a`, `-b`, `-header` | Remove from each `-a` record the portions covered by any `-b` record; a record can split into several. Extra `-a` columns pass through. |
-| `closest`   | `-a`, `-b`, `-header` | For each `-a` record, report the nearest `-b` record (overlap counts as distance 0). Output is the `-a` line followed by the full `-b` line. Ties: all tied `-b` records are reported (bedtools' default `-t all`). No `-b` record on that chrom: `-a` line followed by `.	-1	-1`. |
+| `closest`   | `-a`, `-b`, `-header` | For each `-a` record, report the nearest `-b` record (overlap counts as distance 0; bookended is distance 1, verified with `-d`). Output is the `-a` line followed by the full `-b` line. Ties: all tied `-b` records are reported (bedtools' default `-t all`). No `-b` record on that chrom: `-a` line followed by a placeholder with as many columns as `-b` has (`.	-1	-1` for BED3, `.	-1	-1	.	-1	.` for BED6). |
 
 - Strand-aware flags: **none**.
 - `-header` is the one non-input flag, on every subcommand, because header handling
