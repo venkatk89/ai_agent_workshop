@@ -65,6 +65,8 @@ check_stdin "sort stdin" "$DATA/a.bed" -- sort -i -
 for f in a b hg002.highconf; do
   check "merge $f.bed (sorted)" -- merge -i "$tmp/$f.sorted.bed"
 done
+# Unsorted input: both exit 1 with empty stdout (a.bed is out of order at line 2).
+check "merge unsorted" -- merge -i "$DATA/a.bed"
 
 # --- intersect (#7), subtract (#8), closest (#9) -----------------------------
 # NB: with a.bed as -b, bedtools intersect/subtract exit 1 with no output
