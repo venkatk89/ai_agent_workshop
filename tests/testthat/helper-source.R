@@ -3,6 +3,7 @@
 root <- normalizePath(file.path(testthat::test_path(), "..", ".."))
 source(file.path(root, "R", "bed.R"))
 source(file.path(root, "R", "sort.R"))
+source(file.path(root, "R", "intersect.R"))
 
 # Read a BED string through read_bed_lines(), returning the records and headers.
 read_bed_string <- function(text, header = FALSE) {
