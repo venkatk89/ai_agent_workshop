@@ -175,11 +175,5 @@ inconsistent across commands and stderr is not part of the golden comparison.*
 
 ## 10. Follow-ups this spec creates
 
-Decisions above that conflict with things already in the repo. Fix them when the first
-subcommand lands, not before.
-
-1. **CLAUDE.md** says usage errors exit `2`. §7 says `1` (match bedtools). Update the
-   `Code` section of CLAUDE.md.
-2. **`mytools` with no arguments** currently exits `2` (issue #1's acceptance
-   criterion). Under §7 it exits `1`. Change it in the same commit as (1).
-3. **`testthat`** is not installed on this machine yet.
+1. **`testthat`** is not installed on this machine yet. Install it when the first
+   unit test is written (issue #3).

@@ -9,7 +9,7 @@ main <- function(args) {
     return(0L)
   }
   cat("usage: mytools --version\n", file = stderr())
-  2L
+  1L
 }
 
 quit(status = main(commandArgs(trailingOnly = TRUE)))
