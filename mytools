@@ -1,15 +1,63 @@
 #!/usr/bin/env Rscript
 # mytools: a small reimplementation of a subset of bedtools.
+#
+# Dispatcher only. `mytools <cmd> [args]` sources R/bed.R, then R/<cmd>.R, and
+# calls main_<cmd>(args). Each main_<cmd> returns an exit status (NULL means 0)
+# or raises via die(); this file turns that into stderr text and the exit code.
 
 VERSION <- "0.1.0"
+
+# Directory this script lives in, following symlinks, so R/ is found no matter
+# where mytools is invoked from or linked to.
+script_dir <- function() {
+  arg <- grep("^--file=", commandArgs(trailingOnly = FALSE), value = TRUE)
+  if (length(arg) == 0) return(getwd())
+  dirname(normalizePath(sub("^--file=", "", arg[1]), mustWork = FALSE))
+}
+ROOT <- script_dir()
+
+usage <- function() {
+  cat("usage: mytools <subcommand> [options]\n",
+      "       mytools --version\n",
+      "\n",
+      "subcommands: sort, merge, intersect, subtract, closest\n",
+      sep = "", file = stderr())
+}
 
 main <- function(args) {
   if (length(args) == 1 && args[1] == "--version") {
     cat("mytools ", VERSION, "\n", sep = "")
     return(0L)
   }
-  cat("usage: mytools --version\n", file = stderr())
-  1L
+  if (length(args) == 0) {
+    usage()
+    return(1L)
+  }
+
+  cmd <- args[1]
+  source(file.path(ROOT, "R", "bed.R"), local = FALSE)
+  if (!cmd %in% SUBCOMMANDS) {
+    cat("mytools: unknown subcommand ", cmd, "\n", sep = "", file = stderr())
+    usage()
+    return(1L)
+  }
+  options(mytools.cmd = cmd)
+
+  status <- tryCatch({
+    impl <- file.path(ROOT, "R", paste0(cmd, ".R"))
+    if (!file.exists(impl)) die(cmd, "not implemented yet")
+    source(impl, local = FALSE)
+    fn_name <- paste0("main_", cmd)
+    if (!exists(fn_name, mode = "function")) {
+      die(cmd, paste0("R/", cmd, ".R does not define ", fn_name, "()"))
+    }
+    get(fn_name, mode = "function")(args[-1])
+  }, mytools_error = function(e) {
+    cat(conditionMessage(e), "\n", sep = "", file = stderr())
+    e$status
+  })
+
+  if (is.null(status)) 0L else as.integer(status)
 }
 
-quit(status = main(commandArgs(trailingOnly = TRUE)))
+quit(save = "no", status = main(commandArgs(trailingOnly = TRUE)))
