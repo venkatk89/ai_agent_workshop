@@ -1,5 +1,34 @@
 # Golden tests: bedtools is the oracle
 
+## Running the suite
+
+Three scripts, all also run by CI (`.github/workflows/ci.yml`) on every push and PR:
+
+    ./tests/run_golden.sh   # diffs mytools against bedtools on data/; needs bedtools
+    ./tests/run_unit.sh     # testthat unit tests under tests/testthat/; no bedtools
+    ./tests/run_lint.sh     # lintr over mytools, R/ and tests/; config in .lintr
+
+Each exits non-zero on any failure. The runtime is base R only; the test-time
+packages are installed once with:
+
+    Rscript -e 'install.packages(c("testthat", "lintr"))'
+
+`run_golden.sh` cases live in the script itself, one `check` line per subcommand and
+flag combination in `SPEC.md` §4 plus stdin, `.gz`, and the error paths where both
+tools must exit 1. `MYTOOLS=bedtools ./tests/run_golden.sh` is a useful sanity check
+of the harness: bedtools diffed against itself should pass every case.
+
+Two oracle behaviours the suite encodes on purpose:
+
+- `intersect`/`subtract -a b.bed -b a.bed` exit 1 with **empty stdout**. `a12` is
+  `chr2 0 0` and bedtools widens zero-length `-b` records to `(start-1, end+1)`,
+  which sends `-1` into its bin index and aborts. `closest` doesn't use that index
+  and is fine. We match the exit code.
+- `bedtools sort` and `bedtools merge` with no `-i` print usage and exit **0**
+  (`intersect`/`subtract`/`closest` with a missing `-a`/`-b` exit 1). `SPEC.md` §7
+  says a missing input flag is always exit 1, so there is no golden case for the
+  `-i` commands -- it would encode the disagreement one way or the other.
+
 Real `bedtools` is installed on your VM. It is the reference implementation. A golden
 test runs your `mytools` and real `bedtools` on the same fixture and diffs the output.
 If they differ, you are wrong — not bedtools.

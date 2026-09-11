@@ -1,7 +1,8 @@
-# Deliberately minimal. There is no test step yet -- growing this file is one of the
-# workshop exercises. By the end of the day this should install mytools and run three
-# things on every push and PR: the golden tests against bedtools, your unit tests, and
-# a linter. See tests/README.md and issues/03-golden-tests-and-ci.md.
+# Three guardrails on every push and PR (issues/03): golden tests against real
+# bedtools, testthat unit tests, and lintr. Each runs in its own step so a red run
+# names which one broke; the golden and unit steps compare exit codes and diff
+# stdout inside the scripts themselves. Run the same three locally:
+#   ./tests/run_golden.sh   ./tests/run_unit.sh   ./tests/run_lint.sh
 name: CI
 
 on:
@@ -20,9 +21,25 @@ jobs:
           sudo apt-get install -y --no-install-recommends bedtools
           bedtools --version
 
-      - name: Run golden tests
-        run: |
-          # TODO: replace this with ./tests/run_golden.sh once it exists.
-          # See tests/README.md for the pattern and a worked example.
-          echo "no tests yet"
-          exit 0
+      - name: Install R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - name: Install test-time R packages (runtime is base R only)
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            any::testthat
+            any::lintr
+
+      - name: Golden tests (diff against bedtools)
+        run: ./tests/run_golden.sh
+
+      - name: Unit tests (testthat, no bedtools)
+        if: ${{ !cancelled() }}
+        run: ./tests/run_unit.sh
+
+      - name: Lint (lintr)
+        if: ${{ !cancelled() }}
+        run: ./tests/run_lint.sh
