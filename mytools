@@ -1,15 +1,57 @@
 #!/usr/bin/env Rscript
 # mytools: a small reimplementation of a subset of bedtools.
+#
+# Dispatcher only. `mytools <cmd> ...` sources R/bed.R then R/<cmd>.R and calls
+# main_<cmd>(args). Subcommand logic lives in R/, one file each.
 
 VERSION <- "0.1.0"
+SUBCOMMANDS <- c("sort", "merge", "intersect", "subtract", "closest")
 
-main <- function(args) {
-  if (length(args) == 1 && args[1] == "--version") {
-    cat("mytools ", VERSION, "\n", sep = "")
-    return(0L)
-  }
-  cat("usage: mytools --version\n", file = stderr())
-  1L
+usage <- function() {
+  cat("usage: mytools <subcommand> [options]\n",
+      "       mytools --version\n",
+      "subcommands: ", paste(SUBCOMMANDS, collapse = ", "), "\n",
+      sep = "", file = stderr())
 }
 
-quit(status = main(commandArgs(trailingOnly = TRUE)))
+# Directory holding this script, following symlinks, so R/ resolves regardless
+# of the caller's working directory.
+script_dir <- function() {
+  arg <- grep("^--file=", commandArgs(), value = TRUE)
+  if (length(arg) == 0L) return(".")
+  dirname(normalizePath(sub("^--file=", "", arg[1L])))
+}
+
+main <- function(args) {
+  if (length(args) == 0L) {
+    usage()
+    return(1L)
+  }
+  if (args[1] == "--version") {
+    if (length(args) == 1L) {
+      cat("mytools ", VERSION, "\n", sep = "")
+      return(0L)
+    }
+    usage()
+    return(1L)
+  }
+
+  cmd <- args[1]
+  if (!cmd %in% SUBCOMMANDS) {
+    cat("mytools: unknown subcommand ", cmd, "\n", sep = "", file = stderr())
+    usage()
+    return(1L)
+  }
+
+  rdir <- file.path(script_dir(), "R")
+  impl <- file.path(rdir, paste0(cmd, ".R"))
+  if (!file.exists(impl)) {
+    cat("mytools: ", cmd, ": not implemented yet\n", sep = "", file = stderr())
+    return(1L)
+  }
+  source(file.path(rdir, "bed.R"))
+  source(impl)
+  get(paste0("main_", cmd))(args[-1])
+}
+
+quit(save = "no", status = main(commandArgs(trailingOnly = TRUE)))
