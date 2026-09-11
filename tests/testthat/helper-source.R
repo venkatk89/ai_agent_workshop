@@ -13,5 +13,5 @@ read_bed_string <- function(text, header = FALSE) {
     recs[[length(recs) + 1L]] <<- list(chrom = chrom, start = start, end = end,
                                        fields = fields)
   }, header = header, cmd = "test", file = "<string>")
-  list(records = recs, header = hdr)
+  list(records = recs, header = hdr$header)
 }

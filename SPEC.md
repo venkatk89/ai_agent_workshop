@@ -77,10 +77,21 @@ Every flag name and meaning matches bedtools exactly.
 - Strand-aware flags: **none**.
 - `-header` is the one non-input flag, on every subcommand, because header handling
   was decided as "match bedtools" and bedtools needs the flag to echo headers.
-- **Sorted input:** `merge` and `closest` **require** input sorted by chrom then start
-  and **error** (exit 1) on the first out-of-order record, matching bedtools.
+- **Sorted input:** `merge` and `closest` **require** sorted input and **error**
+  (exit 1) on the first out-of-order record, matching bedtools — but bedtools applies
+  two different rules (verified against v2.31.1):
+  - `closest`: chrom **lexicographic** (`chr1 < chr10 < chr2 < chrX`), then start.
+    `chr2` followed by `chr1` is an error.
+  - `merge`: start non-decreasing within a chromosome, and each chromosome
+    **contiguous** — any chromosome order is accepted (`chr2` then `chr1` is fine)
+    but a chromosome reappearing (`chr1, chr2, chr1`) is an error. Output is in
+    input chromosome order.
+  - Both: equal starts are in order; end is never consulted.
+
   `intersect` and `subtract` accept input in any order, also matching bedtools.
-  *Originally "sort internally"; changed after checking what bedtools actually does.*
+  *Originally "sort internally"; changed after checking what bedtools actually does.
+  The merge/closest split was found while building `R/bed.R` (#4);
+  `check_sorted(chrom_order = "lexicographic" | "grouped")` implements both.*
 
 ## 5. Output
 

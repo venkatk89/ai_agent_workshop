@@ -68,7 +68,7 @@ main_sort <- function(args) {
       lines[n] <<- paste(fields, collapse = "\t")
     },
     header = opts$header, cmd = "sort", file = opts$input
-  )
+  )$header
 
   out <- stdout()
   if (length(header_lines)) writeLines(header_lines, out)
