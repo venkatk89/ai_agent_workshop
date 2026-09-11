@@ -1,0 +1,8 @@
+linters: linters_with_defaults(
+    line_length_linter(100),
+    indentation_linter(indent = 2L),
+    # Constants such as VERSION in `mytools` are UPPER_SNAKE (SPEC.md §9); everything
+    # else is snake_case. camelCase is not allowed.
+    object_name_linter(styles = c("snake_case", "SNAKE_CASE"))
+  )
+encoding: "UTF-8"
