@@ -22,17 +22,23 @@ read_all <- function(lines, ...) {
   on.exit(close(con), add = TRUE)
   seen <- list()
   err <- NULL
+  on_record <- function(chrom, start, end, fields) {
+    seen[[length(seen) + 1L]] <<- list(chrom = chrom, start = start, end = end, fields = fields)
+  }
   res <- tryCatch(
-    read_bed_lines(con, function(chrom, start, end, fields) {
-      seen[[length(seen) + 1L]] <<- list(chrom = chrom, start = start, end = end, fields = fields)
-    }, ...),
-    mytools_error = function(e) { err <<- e; NULL })
+    read_bed_lines(con, on_record, ...),
+    mytools_error = function(e) {
+      err <<- e
+      NULL
+    }
+  )
   list(records = seen, error = err, result = res)
 }
 
 # Run ./mytools with args (and optional stdin text); capture status/stdout/stderr.
 run_mytools <- function(args, input = NULL) {
-  out <- tempfile(); err <- tempfile()
+  out <- tempfile()
+  err <- tempfile()
   on.exit(unlink(c(out, err)))
   status <- system2(MYTOOLS, args, stdout = out, stderr = err, input = input)
   list(status = status,

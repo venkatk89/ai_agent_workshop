@@ -13,6 +13,9 @@ packages are installed once with:
 
     Rscript -e 'install.packages(c("testthat", "lintr"))'
 
+On a bare Ubuntu box the `fs` dependency needs the libuv headers first:
+`sudo apt-get install libuv1-dev`.
+
 `run_golden.sh` cases live in the script itself, one `check` line per subcommand and
 flag combination in `SPEC.md` §4 plus stdin, `.gz`, and the error paths where both
 tools must exit 1. `MYTOOLS=bedtools ./tests/run_golden.sh` is a useful sanity check
@@ -44,19 +47,6 @@ This is worth more than hand-written unit tests here, for three reasons:
 3. **It catches the bug you're about to write.** BED is 0-based half-open, and the
    off-by-one in overlap logic is the classic error. A golden test finds it in
    seconds; reading your own code does not.
-
-## Running the tests in this repo
-
-    ./tests/run_golden.sh   # diffs mytools against bedtools on data/ -- run before every commit
-    ./tests/run_unit.sh     # testthat unit tests under tests/testthat/, no bedtools needed
-
-The unit tests need `testthat`, which is not a runtime dependency and is installed
-once from CRAN:
-
-    Rscript -e 'install.packages("testthat")'
-
-On a bare Ubuntu box its `fs` dependency needs the libuv headers first:
-`sudo apt-get install libuv1-dev`.
 
 ## Two kinds of test, and you want both
 

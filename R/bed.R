@@ -74,8 +74,8 @@ write_bed_line <- function(fields) {
 
 # open_bed(): return a text-mode connection, opened for reading.
 #   "-" or "stdin"  -> the process's standard input
-#   "*.gz"          -> gzfile()
-#   anything else   -> file()
+#   a path ending in .gz  -> gzfile()
+#   anything else         -> file()
 # Missing or unreadable path -> `cannot open <file>`, exit 1 (via die()).
 # The caller owns the connection and should close() it when done.
 open_bed <- function(path, cmd = bed_cmd()) {
@@ -86,8 +86,13 @@ open_bed <- function(path, cmd = bed_cmd()) {
     die(cmd, paste0("cannot open ", path))
   }
   con <- if (grepl("\\.gz$", path)) gzfile(path) else file(path)
-  ok <- tryCatch({ open(con, open = "rt"); TRUE },
-                 error = function(e) FALSE, warning = function(w) FALSE)
+  ok <- tryCatch(
+    {
+      open(con, open = "rt")
+      TRUE
+    },
+    error = function(e) FALSE, warning = function(w) FALSE
+  )
   if (!ok) {
     try(close(con), silent = TRUE)
     die(cmd, paste0("cannot open ", path))

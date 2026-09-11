@@ -4,15 +4,19 @@
 lines <- c("chr1\t0\t100", "chr1\t100\t200")
 
 test_that("a plain file opens and reads", {
-  path <- write_fixture(lines); on.exit(unlink(path))
-  con <- open_bed(path); on.exit(close(con), add = TRUE)
+  path <- write_fixture(lines)
+  on.exit(unlink(path))
+  con <- open_bed(path)
+  on.exit(close(con), add = TRUE)
   expect_true(isOpen(con))
   expect_equal(readLines(con), lines)
 })
 
 test_that("a .gz file is decompressed transparently", {
-  path <- write_fixture(lines, gz = TRUE); on.exit(unlink(path))
-  con <- open_bed(path); on.exit(close(con), add = TRUE)
+  path <- write_fixture(lines, gz = TRUE)
+  on.exit(unlink(path))
+  con <- open_bed(path)
+  on.exit(close(con), add = TRUE)
   expect_s3_class(con, "gzfile")
   expect_equal(readLines(con), lines)
 })
@@ -32,9 +36,10 @@ test_that("'-' and 'stdin' actually read the process's standard input", {
   skip_if_not(file.exists(rscript))
   bed_r <- normalizePath(testthat::test_path("..", "..", "R", "bed.R"))
   for (name in c("-", "stdin")) {
-    code <- sprintf(
-      'source("%s"); con <- open_bed("%s"); n <- 0; read_bed_lines(con, function(c, s, e, f) n <<- n + 1); cat(n)',
-      bed_r, name)
+    code <- sprintf(paste0(
+      'source("%s"); con <- open_bed("%s"); n <- 0; ',
+      "read_bed_lines(con, function(c, s, e, f) n <<- n + 1); cat(n)"
+    ), bed_r, name)
     out <- system2(rscript, c("-e", shQuote(code)), input = lines, stdout = TRUE)
     expect_equal(out, "2", info = name)
   }
@@ -52,7 +57,8 @@ test_that("a directory is `cannot open <file>`", {
 })
 
 test_that("cmd defaults to the running subcommand", {
-  old <- options(mytools.cmd = "closest"); on.exit(options(old))
+  old <- options(mytools.cmd = "closest")
+  on.exit(options(old))
   err <- expect_error(open_bed("nope.bed"), class = "mytools_error")
   expect_equal(conditionMessage(err), "mytools: closest: cannot open nope.bed")
 })

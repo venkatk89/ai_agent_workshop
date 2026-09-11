@@ -9,8 +9,8 @@ feed <- function(recs, ...) {
 }
 unsorted <- function(recs, line, ...) {
   err <- expect_error(feed(recs, ...), class = "mytools_error")
-  expect_equal(conditionMessage(err),
-               sprintf("mytools: closest: in.bed:%d: input is not sorted by chrom then start", line))
+  want <- sprintf("mytools: closest: in.bed:%d: input is not sorted by chrom then start", line)
+  expect_equal(conditionMessage(err), want)
 }
 
 test_that("sorted input passes, including equal starts and ties on end", {
@@ -36,7 +36,8 @@ test_that("lexicographic order is bytewise regardless of locale", {
 })
 
 test_that("grouped: any chromosome order is fine but a revisit is not (bedtools merge)", {
-  expect_true(feed(list(list("chr2", 0), list("chr1", 0), list("chr1", 5)), chrom_order = "grouped"))
+  expect_true(feed(list(list("chr2", 0), list("chr1", 0), list("chr1", 5)),
+                   chrom_order = "grouped"))
   unsorted(list(list("chr1", 0), list("chr2", 0), list("chr1", 7)), 3, chrom_order = "grouped")
   unsorted(list(list("chr1", 5), list("chr1", 0)), 2, chrom_order = "grouped")
 })

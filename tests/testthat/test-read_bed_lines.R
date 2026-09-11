@@ -71,7 +71,8 @@ test_that("header = TRUE keeps the leading header run and streams it to on_heade
   # as bedtools does (see test-bed.R for the bedtools sort -header evidence).
   streamed <- character(0)
   path <- write_fixture(c("#h1", "track x", good, "#late"))
-  con <- open_bed(path); on.exit(close(con))
+  con <- open_bed(path)
+  on.exit(close(con))
   res <- read_bed_lines(con, function(...) NULL, header = TRUE,
                         on_header = function(l) streamed <<- c(streamed, l))
   expect_equal(res$header, c("#h1", "track x"))

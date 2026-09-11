@@ -36,7 +36,8 @@ test_that("die() builds `mytools: <cmd>: [<file>:<line>: ]<msg>` and carries the
 
 test_that("a known subcommand without an implementation is reported, not a crash", {
   # Only meaningful until R/<cmd>.R exists for every subcommand; skip once it does.
-  missing <- SUBCOMMANDS[!file.exists(testthat::test_path("..", "..", "R", paste0(SUBCOMMANDS, ".R")))]
+  impls <- testthat::test_path("..", "..", "R", paste0(SUBCOMMANDS, ".R"))
+  missing <- SUBCOMMANDS[!file.exists(impls)]
   skip_if(length(missing) == 0, "all subcommands implemented")
   r <- run_mytools(c(missing[1], "-i", "x.bed"))
   expect_equal(r$status, 1L)

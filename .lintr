@@ -3,6 +3,13 @@ linters: linters_with_defaults(
     indentation_linter(indent = 2L),
     # Constants such as VERSION in `mytools` are UPPER_SNAKE (SPEC.md §9); everything
     # else is snake_case. camelCase is not allowed.
-    object_name_linter(styles = c("snake_case", "SNAKE_CASE"))
+    object_name_linter(styles = c("snake_case", "SNAKE_CASE")),
+    # Subcommand files call die(), open_bed(), read_bed_lines() etc. from R/bed.R,
+    # which the dispatcher source()s at runtime. lintr analyses one file at a time
+    # and would report every one of them as an undefined global.
+    object_usage_linter = NULL,
+    # Streaming readers keep state in closures (check_sorted() in R/bed.R); `<<-`
+    # into an enclosing function's environment is the base-R idiom for that.
+    assignment_linter(operator = c("<-", "<<-"))
   )
 encoding: "UTF-8"
