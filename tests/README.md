@@ -16,6 +16,19 @@ This is worth more than hand-written unit tests here, for three reasons:
    off-by-one in overlap logic is the classic error. A golden test finds it in
    seconds; reading your own code does not.
 
+## Running the tests in this repo
+
+    ./tests/run_golden.sh   # diffs mytools against bedtools on data/ -- run before every commit
+    ./tests/run_unit.sh     # testthat unit tests under tests/testthat/, no bedtools needed
+
+The unit tests need `testthat`, which is not a runtime dependency and is installed
+once from CRAN:
+
+    Rscript -e 'install.packages("testthat")'
+
+On a bare Ubuntu box its `fs` dependency needs the libuv headers first:
+`sudo apt-get install libuv1-dev`.
+
 ## Two kinds of test, and you want both
 
 **Golden tests** diff you against real bedtools. They prove agreement with reality and

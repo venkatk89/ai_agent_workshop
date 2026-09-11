@@ -126,9 +126,16 @@ is_header_line <- function(line) {
 #              to match that.
 #   header     FALSE (default): header lines are skipped silently.
 #              TRUE: header lines are kept, in order, in the returned $header and
-#              handed to on_header as they are met (they precede the data they
-#              head, so a streaming caller can print them before its first record).
+#              handed to on_header as they are met -- they always precede the
+#              data, so a streaming caller can print them before its first record.
 #   on_header  optional function(line), used only when header = TRUE.
+#
+# What counts as the header matches bedtools: the *leading* run of lines starting
+# with "#", "track" or "browser". The first line that is not one of those -- a
+# blank line included -- ends it. Header-looking lines anywhere later are skipped
+# silently and never echoed, even with -header (bedtools sort -header on
+# "chr2 5 9 / #mid / chr1 10 50" prints no header; on "#a / <blank> / #b / data"
+# it prints only "#a").
 #   sorted     TRUE makes the reader die with `input is not sorted by chrom then
 #              start` at the first out-of-order record (merge and closest).
 #   chrom_order  passed to check_sorted() when sorted = TRUE: "lexicographic"
@@ -160,6 +167,7 @@ read_bed_lines <- function(con, on_record, header = FALSE, on_header = NULL,
   nrec <- 0L
   ncol <- NA_integer_
   headers <- character(0)
+  in_header <- TRUE
   check <- if (isTRUE(sorted)) check_sorted(cmd, file, chrom_order) else NULL
 
   repeat {
@@ -170,14 +178,17 @@ read_bed_lines <- function(con, on_record, header = FALSE, on_header = NULL,
     for (line in chunk) {
       lineno <- lineno + 1L
       if (endsWith(line, "\r")) line <- substr(line, 1L, nchar(line) - 1L)
-      if (!nzchar(line)) next
-      if (is_header_line(line)) {
-        if (isTRUE(header)) {
-          headers <- c(headers, line)
-          if (is.function(on_header)) on_header(line)
+      if (in_header) {
+        if (is_header_line(line)) {
+          if (isTRUE(header)) {
+            headers <- c(headers, line)
+            if (is.function(on_header)) on_header(line)
+          }
+          next
         }
-        next
+        in_header <- FALSE
       }
+      if (!nzchar(line) || is_header_line(line)) next
 
       fields <- strsplit(line, "\t", fixed = TRUE)[[1L]]
       if (length(fields) < 3L) {
